@@ -14,9 +14,6 @@ end
 
 function FN.PRE.simulate()
    -- Guard against simulating in redundant places:
-   if FN.PRE.five_second_coroutine and coroutine.status(FN.PRE.five_second_coroutine) == "suspended" then
-      coroutine.resume(FN.PRE.five_second_coroutine)
-   end
    if not (G.STATE == G.STATES.SELECTING_HAND or
            G.STATE == G.STATES.DRAW_TO_HAND or
            G.STATE == G.STATES.PLAY_TAROT)
@@ -62,9 +59,6 @@ end
 local orig_hl = CardArea.parse_highlighted
 function CardArea:parse_highlighted()
    orig_hl(self)
-   if not FN.PRE.lock_updates and FN.PRE.show_preview then
-      FN.PRE.show_preview = false
-   end
    FN.PRE.add_update_event("immediate")
 end
 
@@ -126,9 +120,6 @@ function FN.PRE.update_on_card_order_change(cardarea)
       elseif cardarea.config.type == 'hand' then
          FN.PRE.hand_order = prev_order
       end
-      if FN.PRE.show_preview and not FN.PRE.lock_updates then
-         FN.PRE.show_preview = false
-      end
       FN.PRE.add_update_event("immediate")
    end
 end
@@ -169,59 +160,24 @@ end
 function G.FUNCS.fn_pre_score_UI_set(e)
    local new_preview_text = ""
    local should_juice = false
-   if FN.PRE.lock_updates then 
-      if e.config.id == "fn_pre_l" then
-         new_preview_text = " CALCULATING "
-         should_juice = true
-      end
-   else  
-      if FN.PRE.data then
-         if FN.PRE.show_preview and (FN.PRE.data.score.min ~= FN.PRE.data.score.max) then
-            -- Format as 'X - Y' :
-            if e.config.id == "fn_pre_l" then
-               new_preview_text = FN.PRE.format_number(FN.PRE.data.score.min) .. " - "
-               if FN.PRE.is_enough_to_win(FN.PRE.data.score.min) then should_juice = true end
-            elseif e.config.id == "fn_pre_r" then
-               new_preview_text = FN.PRE.format_number(FN.PRE.data.score.max)
-               if FN.PRE.is_enough_to_win(FN.PRE.data.score.max) then should_juice = true end
-            end
-         else
-            -- Format as single number:
-            if e.config.id == "fn_pre_l" then
-               if true then
-                  -- Spaces around number necessary to distinguish Min/Max text from Exact text,
-                  -- which is itself necessary to force a HUD update when switching between Min/Max and Exact.
-                  if FN.PRE.show_preview then 
-                     new_preview_text = " " .. FN.PRE.format_number(FN.PRE.data.score.min) .. " "
-                     if FN.PRE.is_enough_to_win(FN.PRE.data.score.min) then should_juice = true end
-                  else
-                     if FN.PRE.is_enough_to_win(FN.PRE.data.score.min) then 
-                        should_juice = true
-                        new_preview_text = "  "
-                     else
-                        if FN.PRE.is_enough_to_win(FN.PRE.data.score.max) then
-                           new_preview_text = "  "
-                           should_juice = true
-                        else
-                           new_preview_text = "  "
-                        end
-                     end
-                  end
-               end
-            else
-               new_preview_text = ""
-            end
-         end
-      else
-         -- Spaces around number necessary to distinguish Min/Max text from Exact text, same as above ^
+   if FN.PRE.data then
+      if FN.PRE.data.score.min ~= FN.PRE.data.score.max then
+         -- Format as 'X - Y' :
          if e.config.id == "fn_pre_l" then
-            if true then new_preview_text = " ?????? "
-            else new_preview_text = "??????"
-            end
-         else
-            new_preview_text = ""
+            new_preview_text = FN.PRE.format_number(FN.PRE.data.score.min) .. " - "
+            if FN.PRE.is_enough_to_win(FN.PRE.data.score.min) then should_juice = true end
+         elseif e.config.id == "fn_pre_r" then
+            new_preview_text = FN.PRE.format_number(FN.PRE.data.score.max)
+            if FN.PRE.is_enough_to_win(FN.PRE.data.score.max) then should_juice = true end
          end
+      elseif e.config.id == "fn_pre_l" then
+         -- Spaces around number necessary to distinguish Min/Max text from Exact text,
+         -- which is itself necessary to force a HUD update when switching between Min/Max and Exact.
+         new_preview_text = " " .. FN.PRE.format_number(FN.PRE.data.score.min) .. " "
+         if FN.PRE.is_enough_to_win(FN.PRE.data.score.min) then should_juice = true end
       end
+   elseif e.config.id == "fn_pre_l" then
+      new_preview_text = " ?????? "
    end
 
    if (not FN.PRE.text.score[e.config.id:sub(-1)]) or new_preview_text ~= FN.PRE.text.score[e.config.id:sub(-1)] then

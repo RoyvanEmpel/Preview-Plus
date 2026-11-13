@@ -18,27 +18,12 @@ function create_UIBox_HUD()
    return contents
 end
 
-function G.FUNCS.calculate_score_button()
-   FN.PRE.start_new_coroutine()
-end
-
 function FN.PRE.get_preview_container()
    return {n=G.UIT.R, config={id = "fn_preview_container", align = "cm"}, nodes={
       {n=G.UIT.C, config={align = "cm"}, nodes={
          {n=G.UIT.R, config={id = "fn_pre_score_wrap", align = "cm", padding = 0.1}, nodes={
             FN.PRE.get_score_node()
-         }},
-         {n=G.UIT.R, config={id = "fn_calculate_score_button_wrap", align = "cm", padding = 0.1}, nodes={
-            FN.PRE.get_calculate_score_button()
          }}
-      }}
-   }}
-end
-
-function FN.PRE.get_calculate_score_button()
-   return {n=G.UIT.C, config={id = "calculate_score_button", button = "calculate_score_button", align = "cm", minh = 0.42, padding = 0.05, r = 0.02, colour = G.C.RED, hover = true, shadow = true}, nodes={
-      {n=G.UIT.R, config={align = "cm"}, nodes={
-         {n=G.UIT.T, config={text = "  Calculate Score  ", colour = G.C.UI.TEXT_LIGHT, shadow = true, scale = 0.36}}
       }}
    }}
 end
